@@ -7,6 +7,7 @@ import (
 	"github.com/nathanjsharpe/crypto-split/app"
 	"github.com/nathanjsharpe/crypto-split/coinbase"
 	"os"
+	"strings"
 )
 
 var fiat string
@@ -42,23 +43,20 @@ func main() {
 		Client: coinbase.NewClient(),
 	}
 
-	err := execute(&a, flag.Args())
+	s, err := splits(&a, flag.Args())
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	fmt.Print(strings.Join(s, ""))
 }
 
-func execute(a *app.Application, args []string) error {
+func splits(a *app.Application, args []string) ([]string, error) {
 	err := a.ParsePosArgs(args)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Invalid arguments: %v", err))
+		return nil, errors.New(fmt.Sprintf("Invalid arguments: %v", err))
 	}
 
-	err = a.PrintSplit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return a.BuyInstructions()
 }

@@ -7,11 +7,10 @@ import (
 )
 
 type Application struct {
-	Fiat     string
-	Holdings float64
-	Crypto1  string
-	Crypto2  string
-	Client   CryptoClient
+	Fiat       string
+	Holdings   float64
+	CryptoDist map[string]float64
+	Client     CryptoClient
 }
 
 type CryptoClient interface {
@@ -25,24 +24,24 @@ func (a *Application) ParsePosArgs(args []string) error {
 	}
 
 	a.Holdings = float64(amtInt)
-	a.Crypto1 = args[1]
-	a.Crypto2 = args[2]
+	a.CryptoDist = map[string]float64{
+		args[1]: 0.7,
+		args[2]: 0.3,
+	}
 
 	return nil
 }
 
-func (a *Application) PrintSplit() error {
-	rate1, err := a.Client.ExchangeRate(a.Fiat, a.Crypto1)
-	if err != nil {
-		return errors.New(fmt.Sprintf("failed to find exchange rate for %v => %v", a.Fiat, a.Crypto1))
-	}
-	rate2, err := a.Client.ExchangeRate(a.Fiat, a.Crypto2)
-	if err != nil {
-		return errors.New(fmt.Sprintf("failed to find exchange rate for %v => %v", a.Fiat, a.Crypto2))
+func (a *Application) BuyInstructions() ([]string, error) {
+	var results []string
+
+	for curr, amt := range a.CryptoDist {
+		r, err := a.Client.ExchangeRate(a.Fiat, curr)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("failed to find exchange rate for %v => %v", a.Fiat, curr))
+		}
+		results = append(results, fmt.Sprintf("$%.2f => %.4f %v", a.Holdings*amt, a.Holdings*amt*r, curr))
 	}
 
-	fmt.Printf("$%.2f => %.5f %v\n", a.Holdings*0.7, a.Holdings*0.7*rate1, a.Crypto1)
-	fmt.Printf("$%.2f => %.5f %v\n", a.Holdings*0.3, a.Holdings*0.3*rate2, a.Crypto2)
-
-	return nil
+	return results, nil
 }

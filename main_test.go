@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nathanjsharpe/crypto-split/app"
-	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -13,9 +13,9 @@ type testClient struct{}
 func (c *testClient) ExchangeRate(fiat, crypto string) (float64, error) {
 	switch {
 	case fiat == "USD" && crypto == "BTC":
-		return 1, nil
+		return 1.0, nil
 	case fiat == "USD" && crypto == "ETH":
-		return 2, nil
+		return 2.0, nil
 	case fiat == "USD":
 		return 0, errors.New("unsupported crypto currency")
 	default:
@@ -27,10 +27,6 @@ func Test_execute_errors(t *testing.T) {
 	type args struct {
 		a    *app.Application
 		args []string
-	}
-	type err struct {
-		wantErr bool
-		msg     string
 	}
 	tests := []struct {
 		name string
@@ -70,13 +66,59 @@ func Test_execute_errors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := execute(tt.args.a, tt.args.args)
+			_, err := splits(tt.args.a, tt.args.args)
 			if err == nil {
 				t.Errorf("expected error matcing '%v', but no error", tt.err)
 			}
-			if match, _ := regexp.MatchString(tt.err, fmt.Sprint(err)); !match {
+			if !strings.Contains(fmt.Sprint(err), tt.err) {
 				t.Errorf("expected error matching '%v', but got '%v'", tt.err, err)
 			}
+		})
+	}
+}
+
+func Test_execute_success(t *testing.T) {
+	a := &app.Application{Fiat: "USD", Client: &testClient{}}
+	tests := []struct {
+		name    string
+		args    []string
+		results []string
+	}{
+		{
+			"With a number that splits evenly",
+			[]string{"100", "BTC", "ETH"},
+			[]string{"$70.00 => 70.0000 BTC", "$30.00 => 60.0000 ETH"},
+		},
+		{
+			"With 2 as the amount",
+			[]string{"1", "BTC", "ETH"},
+			[]string{"$0.70 => 0.7000 BTC", "$0.30 => 0.6000 ETH"},
+		},
+		{
+			"With 7 as the amount",
+			[]string{"7", "BTC", "ETH"},
+			[]string{"$4.90 => 4.9000 BTC", "$2.10 => 4.2000 ETH"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s, err := splits(a, tt.args)
+			if err != nil {
+				t.Errorf("expected no error, but received %v", err)
+			}
+			for _, r := range s {
+				match := false
+				for _, expected := range tt.results {
+					if r == expected {
+						match = true
+						break
+					}
+				}
+				if !match {
+					t.Errorf("expected result %v, but got %v", tt.results, s)
+				}
+			}
+
 		})
 	}
 }
