@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -142,5 +143,18 @@ func Test_ExchangeRate(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func Test_ExchangeRate_real(t *testing.T) {
+	v, ok := os.LookupEnv("CRYPTO_SPLIT_SEND_EXTERNAL_REQUESTS")
+	if !ok || v != "true" {
+		t.Skip("skipping test; set CRYPTO_SPLIT_SEND_EXTERNAL_REQUESTS to run")
+	}
+
+	c := NewClient()
+	_, err := c.ExchangeRate("USD", "BTC")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
 	}
 }

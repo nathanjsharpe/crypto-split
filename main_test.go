@@ -87,17 +87,17 @@ func Test_splits_success(t *testing.T) {
 		{
 			"With a number that splits evenly",
 			[]string{"100", "BTC", "ETH"},
-			[]string{"$70.00 => 70.0000 BTC", "$30.00 => 60.0000 ETH"},
+			[]string{"70.00 USD => 70.0000 BTC", "30.00 USD => 60.0000 ETH"},
 		},
 		{
 			"With 2 as the amount",
 			[]string{"1", "BTC", "ETH"},
-			[]string{"$0.70 => 0.7000 BTC", "$0.30 => 0.6000 ETH"},
+			[]string{"0.70 USD => 0.7000 BTC", "0.30 USD => 0.6000 ETH"},
 		},
 		{
 			"With 7 as the amount",
 			[]string{"7", "BTC", "ETH"},
-			[]string{"$4.90 => 4.9000 BTC", "$2.10 => 4.2000 ETH"},
+			[]string{"4.90 USD => 4.9000 BTC", "2.10 USD => 4.2000 ETH"},
 		},
 	}
 	for _, tt := range tests {
