@@ -49,7 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Print(strings.Join(s, ""))
+	fmt.Println(strings.Join(s, "\n"))
 }
 
 func splits(a *app.Application, args []string) ([]string, error) {

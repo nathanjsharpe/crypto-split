@@ -10,6 +10,7 @@ import (
 
 type Client struct {
 	cachedRates map[string]RateCache
+	baseUrl     string
 }
 
 const baseUrl string = "https://api.coinbase.com/v2"
@@ -17,13 +18,14 @@ const baseUrl string = "https://api.coinbase.com/v2"
 func NewClient() *Client {
 	return &Client{
 		cachedRates: make(map[string]RateCache),
+		baseUrl:     baseUrl,
 	}
 }
 
 func (c *Client) ExchangeRate(fiat string, crypto string) (float64, error) {
 	_, cached := c.cachedRates[fiat]
 	if !cached {
-		rates, err := fetchRates(fiat)
+		rates, err := fetchRates(fiat, c)
 		if err != nil {
 			return 0, err
 		}
@@ -38,14 +40,14 @@ func (c *Client) ExchangeRate(fiat string, crypto string) (float64, error) {
 	return cache.rate(crypto)
 }
 
-func get(path string, params map[string]string) ([]byte, error) {
-	base, err := url.Parse(baseUrl)
+func (c *Client) get(path string, params map[string]string) ([]byte, error) {
+	base, err := url.Parse(c.baseUrl)
 	if err != nil {
 		return nil, err
 	}
 	q := url.Values{}
-	for _, param := range params {
-		q.Add(param, params[param])
+	for k, val := range params {
+		q.Add(k, val)
 	}
 	base.RawQuery = q.Encode()
 
@@ -54,6 +56,7 @@ func get(path string, params map[string]string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("error fetching exchange rates")
 	}
+	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

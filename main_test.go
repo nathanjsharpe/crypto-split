@@ -23,7 +23,7 @@ func (c *testClient) ExchangeRate(fiat, crypto string) (float64, error) {
 	}
 }
 
-func Test_execute_errors(t *testing.T) {
+func Test_splits_errors(t *testing.T) {
 	type args struct {
 		a    *app.Application
 		args []string
@@ -77,7 +77,7 @@ func Test_execute_errors(t *testing.T) {
 	}
 }
 
-func Test_execute_success(t *testing.T) {
+func Test_splits_success(t *testing.T) {
 	a := &app.Application{Fiat: "USD", Client: &testClient{}}
 	tests := []struct {
 		name    string

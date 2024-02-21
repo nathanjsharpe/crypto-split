@@ -21,7 +21,7 @@ type RateCache struct {
 func (cache *RateCache) rate(curr string) (float64, error) {
 	rateStr, ok := cache.rates[curr]
 	if !ok {
-		return 0, errors.New("crypto currency not found in exchange")
+		return 0, errors.New("no exchange rate")
 	}
 
 	rate, err := strconv.ParseFloat(rateStr, 64)
@@ -32,8 +32,8 @@ func (cache *RateCache) rate(curr string) (float64, error) {
 	return rate, nil
 }
 
-func fetchRates(fiat string) (map[string]string, error) {
-	body, err := get("/exchange-rates", map[string]string{"currency": fiat})
+func fetchRates(fiat string, c *Client) (map[string]string, error) {
+	body, err := c.get("/exchange-rates", map[string]string{"currency": fiat})
 	var cryptoResp exchangeRatesResp
 	err = json.Unmarshal(body, &cryptoResp)
 	if err != nil {
@@ -41,7 +41,4 @@ func fetchRates(fiat string) (map[string]string, error) {
 	}
 
 	return cryptoResp.Data.Rates, nil
-
-	//c.ratesFetched = time.Now()
-	//c.rates = cryptoResp.Data.Rates
 }

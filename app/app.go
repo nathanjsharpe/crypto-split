@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 )
 
@@ -11,6 +12,12 @@ type Application struct {
 	Holdings   float64
 	CryptoDist map[string]float64
 	Client     CryptoClient
+}
+
+type CryptoPurchase struct {
+	fiatAmt   float64
+	cryptoAmt float64
+	curr      string
 }
 
 type CryptoClient interface {
@@ -33,15 +40,38 @@ func (a *Application) ParsePosArgs(args []string) error {
 }
 
 func (a *Application) BuyInstructions() ([]string, error) {
+	dirs, err := a.splitBuys()
+	if err != nil {
+		return nil, err
+	}
+
 	var results []string
+
+	for _, d := range dirs {
+		results = append(results, fmt.Sprintf("%.2f %v => %.4f %v", d.fiatAmt, a.Fiat, d.cryptoAmt, d.curr))
+	}
+
+	return results, nil
+}
+
+func (a *Application) splitBuys() ([]CryptoPurchase, error) {
+	var results []CryptoPurchase
 
 	for curr, amt := range a.CryptoDist {
 		r, err := a.Client.ExchangeRate(a.Fiat, curr)
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("failed to find exchange rate for %v => %v", a.Fiat, curr))
 		}
-		results = append(results, fmt.Sprintf("$%.2f => %.4f %v", a.Holdings*amt, a.Holdings*amt*r, curr))
+		results = append(results, CryptoPurchase{
+			fiatAmt:   a.Holdings * amt,
+			cryptoAmt: a.Holdings * amt * r,
+			curr:      curr,
+		})
 	}
+
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].fiatAmt > results[j].fiatAmt
+	})
 
 	return results, nil
 }
