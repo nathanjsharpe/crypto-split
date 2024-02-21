@@ -10,6 +10,8 @@ import (
 
 type testClient struct{}
 
+// We'll use a test client that implements the CryptoClient interface. It supports just enough currencies to cover test
+// cases.
 func (c *testClient) ExchangeRate(fiat, crypto string) (float64, error) {
 	switch {
 	case fiat == "USD" && crypto == "BTC":
@@ -85,7 +87,7 @@ func Test_splits_success(t *testing.T) {
 		results []string
 	}{
 		{
-			"With a number that splits evenly",
+			"With 100 as the amount",
 			[]string{"100", "BTC", "ETH"},
 			[]string{"70.00 USD => 70.0000 BTC", "30.00 USD => 60.0000 ETH"},
 		},

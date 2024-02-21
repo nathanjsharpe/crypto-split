@@ -86,6 +86,8 @@ func Test_ExchangeRate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqs := 0
+			// We set up a test server to control the responses and avoid unnecessary http calls to an external
+			// server. The server responds with json in the same shape as the coinbase API.
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				reqs++
 				if reqs > tt.reqs {
@@ -146,6 +148,9 @@ func Test_ExchangeRate(t *testing.T) {
 	}
 }
 
+// This test will only run if the environment variable CRYPTO_SPLIT_SEND_EXTERNAL_REQUESTS is set to "true".
+// It makes an actual request to the coinbase API, so it is not run by default. It can act as a sort of once per release
+// smoke test to make sure the API has not changed.
 func Test_ExchangeRate_real(t *testing.T) {
 	v, ok := os.LookupEnv("CRYPTO_SPLIT_SEND_EXTERNAL_REQUESTS")
 	if !ok || v != "true" {
@@ -153,8 +158,11 @@ func Test_ExchangeRate_real(t *testing.T) {
 	}
 
 	c := NewClient()
-	_, err := c.ExchangeRate("USD", "BTC")
+	r, err := c.ExchangeRate("USD", "BTC")
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
+	}
+	if r == 0 {
+		t.Errorf("expected rate to be non-zero, got %v", r)
 	}
 }
