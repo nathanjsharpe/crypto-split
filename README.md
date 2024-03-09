@@ -1,5 +1,7 @@
 This is a small utility to help intrepid investors buy cryptocurrencies in a 70/30 split. 
 
+![build+test](https://github.com/nathanjsharpe/crypto-split/actions/workflows/go.yml/badge.svg)
+
 Given an amount of money to invest and a couple of cryptocurrencies to buy, it uses the Coinbase API to find exchange rates and tells the user how much of each cryptocurrency to buy to invest 70% of the investment in the first cryptocurrency and 30% in the second.
 
 It supports any fiat currency and cryptocurrency that Coinbase does. You can get an idea of basic usage by just running without arguments.
