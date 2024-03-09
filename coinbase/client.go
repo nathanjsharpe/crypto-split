@@ -45,6 +45,7 @@ func (c *Client) get(path string, params map[string]string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	q := url.Values{}
 	for k, val := range params {
 		q.Add(k, val)
