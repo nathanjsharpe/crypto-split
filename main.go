@@ -8,13 +8,6 @@ import (
 	"os"
 )
 
-type config struct {
-	fiat        string
-	holdingsAmt float64
-	crypto1     string
-	crypto2     string
-}
-
 func usage() {
 	fmt.Println("Usage: crypto-split <amount> <crypto currency 1> <crypto currency 2>")
 	fmt.Println("You will be given how much of the given crypto currencies to buy to have a split of 70% crypto currency 1 and 30% crypto currency 2.")
