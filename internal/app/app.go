@@ -37,13 +37,13 @@ func Run(cfg *Config, args []string) error {
 	cfg.crypto1 = strings.ToUpper(args[1])
 	cfg.crypto2 = strings.ToUpper(args[2])
 
-	p, err := purchases(cfg, map[string]float64{cfg.crypto1: 0.7, cfg.crypto2: 0.3})
+	ps, err := purchases(cfg, map[string]float64{cfg.crypto1: 0.7, cfg.crypto2: 0.3})
 	if err != nil {
 		return err
 	}
 
-	for _, d := range p {
-		_, err = fmt.Fprintf(cfg.Out, "%.2f %v => %.5f %v\n", d.fiatAmt, cfg.Fiat, d.cryptoAmt, d.curr)
+	for _, p := range ps {
+		_, err = fmt.Fprintf(cfg.Out, "%.2f %v => %.5f %v\n", p.fiatAmt, cfg.Fiat, p.cryptoAmt, p.curr)
 		if err != nil {
 			return err
 		}
@@ -62,13 +62,13 @@ func purchases(cfg *Config, distribution map[string]float64) ([]cryptoPurchase, 
 	var results []cryptoPurchase
 
 	for curr, amt := range distribution {
-		r, err := cfg.Client.ExchangeRate(cfg.Fiat, curr)
+		rate, err := cfg.Client.ExchangeRate(cfg.Fiat, curr)
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("failed to find exchange rate for %v => %v", cfg.Fiat, curr))
 		}
 		results = append(results, cryptoPurchase{
 			fiatAmt:   cfg.holdings * amt,
-			cryptoAmt: cfg.holdings * amt * r,
+			cryptoAmt: cfg.holdings * amt * rate,
 			curr:      curr,
 		})
 	}
