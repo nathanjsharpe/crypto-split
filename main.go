@@ -1,20 +1,12 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
-	"github.com/nathanjsharpe/crypto-split/app"
 	"github.com/nathanjsharpe/crypto-split/coinbase"
+	"github.com/nathanjsharpe/crypto-split/internal/app"
 	"os"
-	"strings"
 )
-
-var fiat string
-
-func init() {
-	flag.StringVar(&fiat, "fiat", "USD", "The fiat currency to use for holdings, as ISO 4217 currency code")
-}
 
 func usage() {
 	fmt.Println("Usage: crypto-split <amount> <crypto currency 1> <crypto currency 2>")
@@ -24,39 +16,24 @@ func usage() {
 }
 
 func main() {
+	var cfg app.Config
+
+	flag.StringVar(&cfg.Fiat, "fiat", "USD", "The fiat currency to use for holdings, as ISO 4217 currency code")
+
 	flag.Usage = usage
 	flag.Parse()
 
-	switch flag.NArg() {
-	case 0:
+	if flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(0)
-	case 3:
-	default:
-		fmt.Println("Please provide 3 arguments.")
-		flag.Usage()
+	}
+
+	cfg.Client = coinbase.NewClient()
+	cfg.Out = os.Stdout
+
+	err := app.Run(&cfg, flag.Args())
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
 		os.Exit(1)
 	}
-
-	a := app.Application{
-		Fiat:   fiat,
-		Client: coinbase.NewClient(),
-	}
-
-	s, err := splits(&a, flag.Args())
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	fmt.Println(strings.Join(s, "\n"))
-}
-
-func splits(a *app.Application, args []string) ([]string, error) {
-	err := a.ParsePosArgs(args)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Invalid arguments: %v", err))
-	}
-
-	return a.BuyInstructions()
 }

@@ -34,6 +34,10 @@ func (cache *RateCache) rate(curr string) (float64, error) {
 
 func fetchRates(fiat string, c *Client) (map[string]string, error) {
 	body, err := c.get("/exchange-rates", map[string]string{"currency": fiat})
+	if err != nil {
+		return nil, err
+	}
+
 	var cryptoResp exchangeRatesResp
 	err = json.Unmarshal(body, &cryptoResp)
 	if err != nil {
